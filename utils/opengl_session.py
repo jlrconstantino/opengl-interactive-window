@@ -113,10 +113,10 @@ class OpenGLSession:
 
         # Inicialização das componentes e da matriz de transformação
         self.components = list()
-        self.transformation = np.array([1.0, 0.0, 0.0, 0.0, 
-                                        0.0, 1.0, 0.0, 0.0, 
-                                        0.0, 0.0, 1.0, 0.0, 
-                                        0.0, 0.0, 0.0, 1.0], np.float32)
+        self.transformation = np.array([[1.0, 0.0, 0.0, 0.0], 
+                                        [0.0, 1.0, 0.0, 0.0], 
+                                        [0.0, 0.0, 1.0, 0.0], 
+                                        [0.0, 0.0, 0.0, 1.0]], np.float32)
     
 
     def add_component(self, component:OpenGLComponent):
@@ -196,11 +196,26 @@ class OpenGLSession:
         glClearColor(*color)
     
 
-    def transform(self, matrix:Sequence):
+    def clear_transformation(self):
+        ''' Remove a matriz de transformações atual '''
+        self.transformation = np.array([[1.0, 0.0, 0.0, 0.0], 
+                                        [0.0, 1.0, 0.0, 0.0], 
+                                        [0.0, 0.0, 1.0, 0.0], 
+                                        [0.0, 0.0, 0.0, 1.0]], np.float32)
+    
+
+    def set_transformation(self, matrix:Sequence):
         ''' Associa uma matriz de transformação aos buffers do OpenGL '''
         if len(matrix) != 4:
             raise ValueError("expected 'matrix' to have four dimensions")
         self.transformation = matrix
+    
+
+    def add_transformation(self, matrix:Sequence):
+        ''' Encadeia uma nova transformação à transformação atual '''
+        if len(matrix) != 4:
+            raise ValueError("expected 'matrix' to have four dimensions")
+        self.transformation = np.dot(matrix, self.transformation)
 
 
     def render(self):
