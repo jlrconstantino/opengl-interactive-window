@@ -4,7 +4,7 @@ import ctypes
 from OpenGL.GL import *
 from collections.abc import Sequence
 from utils.glfw_window import GLFWWindow
-from utils.components import OpenGLComponent
+from utils.components import OpenGLComponent, OpenGLComponentCompound
 from utils.typeutils import check_type
 from utils.iterutils import flatten
 from utils.colors import rgb_white_color
@@ -40,6 +40,7 @@ class OpenGLSession:
     components = None
     program = None
     color_buffer = None
+    transf_buffer = None
     transformation = None
 
     def __init__(self, window:GLFWWindow, num_dims:int = 2) -> None:
@@ -121,7 +122,7 @@ class OpenGLSession:
 
     def add_component(self, component:OpenGLComponent):
         ''' Registra um novo componente '''
-        check_type(component, "component", OpenGLComponent)
+        #check_type(component, "component", OpenGLComponent)
         self.components.append(component)
 
     
@@ -173,6 +174,7 @@ class OpenGLSession:
 
         # Aquisição do buffer de coloração
         self.color_buffer = glGetUniformLocation(self.program, "color")
+        self.transf_buffer = glGetUniformLocation(self.program, "mat_transformation")
         
         # Para 3D
         if self.num_dims == 3:
@@ -217,6 +219,19 @@ class OpenGLSession:
             raise ValueError("expected 'matrix' to have four dimensions")
         self.transformation = np.dot(matrix, self.transformation)
 
+    
+    def _render_component(self, num_rendered_vertices, cp):
+        ''' Renderiza um objeto e retorna a quantia de vértices dele '''
+
+        # Quantia de vértices da componente
+        num_vertices = len(cp)
+
+        # Aplicação da coloração e da forma da componente
+        glUniform4f(self.color_buffer, *cp.color)
+        glDrawArrays(cp.primitive, num_rendered_vertices, num_vertices)
+
+        return num_vertices
+
 
     def render(self):
         ''' Renderiza todos os componentes registrados na sessão '''
@@ -231,17 +246,13 @@ class OpenGLSession:
         # Iteração ao longo das componentes
         for cp in flatten(self.components):
 
-            # Aplicação da transformação
-            loc = glGetUniformLocation(self.program, "mat_transformation")
-            glUniformMatrix4fv(loc, 1, GL_TRUE, self.transformation)
-
-            # Quantia de vértices da componente
-            num_vertices = len(cp)
-
-            # Aplicação da coloração e da forma da componente
-            glUniform4f(self.color_buffer, *cp.color)
-            glDrawArrays(cp.primitive, num_rendered_vertices, num_vertices)
-
-            # Atualização da quantia de vértices renderizados
-            num_rendered_vertices += num_vertices
-        
+            # Aplicação da transformação e renderização
+            if isinstance(cp, OpenGLComponentCompound):
+                glUniformMatrix4fv(self.transf_buffer, 1, GL_TRUE, cp.transformation)
+                for cp2 in cp.components:
+                    num_rendered_vertices += self._render_component(num_rendered_vertices, cp2)
+            else:
+                glUniformMatrix4fv(self.transf_buffer, 1, GL_TRUE, self.transformation)
+                num_rendered_vertices += self._render_component(num_rendered_vertices, cp)
+                
+            

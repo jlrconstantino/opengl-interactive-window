@@ -44,8 +44,6 @@ class OpenGLComponent:
         Realiza transformação dos vértices com base 
         em uma matriz de transformação fornecida. 
         '''
-        if len(matrix) != len(self.vertices):
-            raise ValueError("expected 'matrix' to have {} dimensions".format(len(self.vertices)))
         self.vertices = np.dot(matrix, self.vertices)
 
     def __len__(self):
@@ -225,3 +223,27 @@ class Circle(OpenGLComponent):
         
         # Inicialização da componente principal
         super().__init__(GL_TRIANGLE_FAN, vertices, color)
+
+
+class OpenGLComponentCompound:
+    ''' Conjunto de componentes do OpenGL '''
+
+    def __init__(self, components):
+        '''
+        Inicialização do conjunto de componentes.
+
+        Parâmetros:
+        ----------
+        components: array-like
+            Lista de componentes que comporão o conjunto.
+        '''
+        self.components = list()
+        self.components.extend(components)
+        self.transformation = np.array([[1.0, 0.0, 0.0, 0.0], 
+                                        [0.0, 1.0, 0.0, 0.0], 
+                                        [0.0, 0.0, 1.0, 0.0], 
+                                        [0.0, 0.0, 0.0, 1.0]], np.float32)
+    
+    @property
+    def vertices(self):
+        return np.vstack([cp.vertices for cp in self.components])

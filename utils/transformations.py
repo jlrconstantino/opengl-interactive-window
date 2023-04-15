@@ -1,5 +1,5 @@
 # Dependências
-from numpy import array, float32, cos, sin
+from numpy import array, float32, dot, cos, sin
 
 def translate2D(tx:float, ty:float):
     '''
@@ -211,3 +211,23 @@ def zrotate3D(t:float):
         [0.0, 0.0, 1.0, 0.0],
         [0.0, 0.0, 0.0, 1.0],
     ], dtype=float32)
+
+
+def relative_zrotate3D(t:float, x0:float=0.0, y0:float=0.0, z0:float=0.0):
+    '''
+    Retorna uma matriz de rotação tridimensional, 
+    relativa a um ponto de referência, no eixo das 
+    cotas considerando coordenadas homogêneas.
+
+    Parâmetros:
+    ----------
+    t: float
+        Ângulo de rotação em radianos.
+    '''
+    return dot(
+        translate3D(x0, y0, z0), 
+        dot(
+            zrotate3D(t),
+            translate3D(-x0, -y0, -z0)
+        )
+    )
