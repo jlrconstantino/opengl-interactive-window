@@ -132,6 +132,32 @@ class Triangles(OpenGLComponent):
         super().__init__(primitive, vertices, color)
 
 
+class Trapezoid(OpenGLComponent):
+    ''' Componente OpenGL para representação de um trapezoide '''
+
+    def __init__(self, vertices:Sequence, color:Sequence = None):
+        '''
+        Inicialização da componente.
+
+        Parâmetros:
+        ----------
+        vertices: Sequence
+            Arranjo contendo os vértices.
+        color: Sequence, default = None
+            Arranjo RGB com quatro dimensões. Caso nenhuma cor seja 
+            fornecida, a cor preta será utilizada.
+        '''
+        # Verificação
+        if len(vertices) != 4:
+            raise ValueError("expected four vertices")
+        
+        # Garantia de renderização correta
+        vertices = np.vstack((vertices, vertices[0]))
+
+        # Composição
+        super().__init__(GL_TRIANGLE_STRIP, vertices, color)
+
+
 class Rectangle(OpenGLComponent):
     ''' Componente OpenGL para representação de um retângulo '''
 
