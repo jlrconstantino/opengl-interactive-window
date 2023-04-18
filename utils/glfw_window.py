@@ -57,13 +57,13 @@ class GLFWWindow:
         # Eventos de tecla
         def key_event(window, key, scancode, action, mods):
             for callback in self.key_callbacks[key]:
-                callback(action)
+                callback(key, action)
         glfw.set_key_callback(window, key_event)
 
         # Eventos de clique
         def mouse_event(window,button,action,mods):
             for callback in self.mouse_callbacks[button]:
-                callback(action)
+                callback(button, action)
         glfw.set_mouse_button_callback(window,mouse_event)
     
 
@@ -79,8 +79,9 @@ class GLFWWindow:
             "A" e "PAUSE".
         callback: function
             Função de callback para a tecla correspondente. 
-            Deve apresentar único parâmetro referente à 
-            ação realizada na tecla.
+            Deve apresentar dois parâmetros: um referente à 
+            tecla pressionada, e outro referente à
+            ação realizada nessa tecla.
         '''
         try:
             key = getattr(glfw, "KEY_{}".format(key.upper()))
@@ -89,22 +90,28 @@ class GLFWWindow:
             raise UnknownKeyError()
     
 
-    def add_mouse_callback(self, button:int, callback):
+    def add_mouse_callback(self, button:str, callback):
         ''' 
-        Adiciona um callback aos eventos de um botão 
-        de mouse específico.
+        Adiciona um callback aos eventos de uma tecla 
+        específica.
 
         Parâmetros:
         ----------
-        button: int
-            Código do botão. Por exemplo, 0 para o botão 
-            esquerdo, e 1 para o direito.
+        button: str
+            String referente à tecla, por exemplo, 
+            "LEFT" e "RIGHT".
         callback: function
             Função de callback para a tecla correspondente. 
-            Deve apresentar único parâmetro referente à 
-            ação realizada na tecla.
+            Deve apresentar dois parâmetros: um referente à 
+            tecla pressionada, e outro referente à
+            ação realizada nessa tecla.
         '''
-        self.mouse_callbacks[button].append(callback)
+        try:
+            button = getattr(glfw, "MOUSE_BUTTON_{}".format(button.upper()))
+            self.mouse_callbacks[button].append(callback)
+        except:
+            raise UnknownKeyError()
+        
 
 
     def display(self):
