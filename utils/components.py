@@ -275,6 +275,11 @@ class OpenGLComponentCompound:
         return np.vstack([cp.vertices for cp in self.components])
 
 
+    @property
+    def center(self):
+        return np.mean(self.vertices, axis=0)
+
+
     def rescale(self, sx:float = 0.0, sy:float = 0.0, sz:float = None):
         ''' 
         Rescala todos os componentes.
@@ -315,7 +320,7 @@ class OpenGLComponentCompound:
             cp.vertices -= center
 
 
-    def move_center_to(self, x0:float = 0.0, y0:float = 0.0, z0:float = None):
+    def move_to(self, x0:float = 0.0, y0:float = 0.0, z0:float = None):
         ''' 
         Centraliza todos os elementos em uma região especificada. 
 
