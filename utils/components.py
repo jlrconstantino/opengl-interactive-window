@@ -273,3 +273,75 @@ class OpenGLComponentCompound:
     @property
     def vertices(self):
         return np.vstack([cp.vertices for cp in self.components])
+
+
+    def rescale(self, sx:float = 0.0, sy:float = 0.0, sz:float = None):
+        ''' 
+        Rescala todos os componentes.
+
+        Parâmetros:
+        ----------
+        sx: float, default = 0.0
+            Rescala da abscissa.
+        sy: float, default = 0.0
+            Rescala da ordenada.
+        sz: float, default = None
+            Rescala da cota. Não forneça um 
+            valor caso seja bidimensional.
+        '''
+        # Centro atual
+        center = np.mean(self.vertices, axis=0)
+        scale_matrix = None
+
+        # 2D
+        if sz is None:
+            scale_matrix = np.array([
+                [sx, 0.0], 
+                [0.0, sy],
+            ], dtype=np.float32)
+        
+        # 3D
+        else:
+            scale_matrix = np.array([
+                [sx, 0.0, 0.0], 
+                [0.0, sy, 0.0], 
+                [0.0, 0.0, sz],
+            ], dtype=np.float32)
+        
+        # Aplicação da transformação
+        for cp in self.components:
+            cp.vertices += center
+            cp.vertices = np.dot(cp.vertices, scale_matrix)
+            cp.vertices -= center
+
+
+    def move_center_to(self, x0:float = 0.0, y0:float = 0.0, z0:float = None):
+        ''' 
+        Centraliza todos os elementos em uma região especificada. 
+
+        Parâmetros:
+        ----------
+        x0: float, default = 0.0
+            Abscissa do novo centro do conjunto de componentes.
+        y0: float, default = 0.0
+            Ordenada do novo centro do conjunto de componentes.
+        z0: float, default = None
+            Cota do novo centro do conjunto de componentes.
+            Não forneça um valor caso seja bidimensional.
+        '''
+        # Centro atual
+        center = np.mean(self.vertices, axis=0)
+        new_center = None
+
+        # 2D
+        if z0 is None:
+            new_center = np.array([x0, y0])
+
+        # 3D
+        else:
+            new_center = np.array([x0, y0, z0])
+            
+        # Aplicação da transformação
+        dist = new_center - center
+        for cp in self.components:
+            cp.vertices += dist
