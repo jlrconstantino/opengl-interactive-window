@@ -17,7 +17,7 @@ class OpenGLComponent:
     vertices:Sequence
     color:Sequence
 
-    def __init__(self, primitive:int, vertices:Sequence, color:Sequence = None):
+    def __init__(self, primitive:int, vertices:Sequence, color:Sequence = None, line_width:float = 1.0):
         '''
         Inicialização da componente.
 
@@ -30,6 +30,9 @@ class OpenGLComponent:
         color: Sequence, default = None
             Arranjo RGB com quatro dimensões. Caso nenhuma cor seja 
             fornecida, a cor preta será utilizada.
+        line_width: float, default = 1.0
+            Espessura da linha a ser utilizada na renderização 
+            do objeto.
         '''
         if color is None:
             color = rgb_black_color()
@@ -38,6 +41,7 @@ class OpenGLComponent:
         self.primitive = primitive
         self.vertices = vertices
         self.color = color
+        self.line_width = line_width
     
     def transform(self, matrix:Sequence):
         ''' 
@@ -73,7 +77,7 @@ class Points(OpenGLComponent):
 class Lines(OpenGLComponent):
     ''' Componente OpenGL para representação de linhas '''
 
-    def __init__(self, vertices:Sequence, color:Sequence = None, *, mode:str = None):
+    def __init__(self, vertices:Sequence, color:Sequence = None, line_width:float = 1.0, *, mode:str = None):
         '''
         Inicialização da componente.
 
@@ -84,6 +88,9 @@ class Lines(OpenGLComponent):
         color: Sequence, default = None
             Arranjo RGB com quatro dimensões. Caso nenhuma cor seja 
             fornecida, a cor preta será utilizada.
+        line_width: float, default = 1.0
+            Espessura da linha a ser utilizada na renderização 
+            do objeto.
         mode: str, default = None
             Indica o modo de renderização. Caso não seja fornecido, 
             utilizará GL_LINES para renderizar linhas a cada dois 
@@ -99,13 +106,13 @@ class Lines(OpenGLComponent):
                 primitive = GL_LINE_STRIP
             elif mode == "loop":
                 primitive = GL_LINE_LOOP
-        super().__init__(primitive, vertices, color)
+        super().__init__(primitive, vertices, color, line_width)
     
 
 class Triangles(OpenGLComponent):
     ''' Componente OpenGL para representação de triângulos '''
 
-    def __init__(self, vertices:Sequence, color:Sequence = None, *, mode:str = None):
+    def __init__(self, vertices:Sequence, color:Sequence = None, line_width:float = 1.0, *, mode:str = None):
         '''
         Inicialização da componente.
 
@@ -116,6 +123,9 @@ class Triangles(OpenGLComponent):
         color: Sequence, default = None
             Arranjo RGB com quatro dimensões. Caso nenhuma cor seja 
             fornecida, a cor preta será utilizada.
+        line_width: float, default = 1.0
+            Espessura da linha a ser utilizada na renderização 
+            do objeto.
         mode: str, default = None
             Indica o modo de renderização. Caso não seja fornecido, 
             utilizará GL_TRIANGLES para renderizar triângulos a cada 
@@ -129,13 +139,13 @@ class Triangles(OpenGLComponent):
                 primitive = GL_TRIANGLE_STRIP
             elif mode == "fan":
                 primitive = GL_TRIANGLE_FAN
-        super().__init__(primitive, vertices, color)
+        super().__init__(primitive, vertices, color, line_width)
 
 
 class Trapezoid(OpenGLComponent):
     ''' Componente OpenGL para representação de um trapezoide '''
 
-    def __init__(self, vertices:Sequence, color:Sequence = None):
+    def __init__(self, vertices:Sequence, color:Sequence = None, line_width:float = 1.0):
         '''
         Inicialização da componente.
 
@@ -146,6 +156,9 @@ class Trapezoid(OpenGLComponent):
         color: Sequence, default = None
             Arranjo RGB com quatro dimensões. Caso nenhuma cor seja 
             fornecida, a cor preta será utilizada.
+        line_width: float, default = 1.0
+            Espessura da linha a ser utilizada na renderização 
+            do objeto.
         '''
         # Verificação
         if len(vertices) != 4:
@@ -155,13 +168,13 @@ class Trapezoid(OpenGLComponent):
         vertices = np.vstack((vertices, vertices[0]))
 
         # Composição
-        super().__init__(GL_TRIANGLE_STRIP, vertices, color)
+        super().__init__(GL_TRIANGLE_STRIP, vertices, color, line_width)
 
 
 class Rectangle(OpenGLComponent):
     ''' Componente OpenGL para representação de um retângulo '''
 
-    def __init__(self, width:float, height:float, x0:float = 0.0, y0:float = 0.0, color:Sequence = None):
+    def __init__(self, width:float, height:float, x0:float = 0.0, y0:float = 0.0, color:Sequence = None, line_width:float = 1.0):
         '''
         Inicialização da componente.
 
@@ -178,6 +191,9 @@ class Rectangle(OpenGLComponent):
         color: Sequence, default = None
             Arranjo RGB com quatro dimensões. Caso nenhuma cor seja 
             fornecida, a cor preta será utilizada.
+        line_width: float, default = 1.0
+            Espessura da linha a ser utilizada na renderização 
+            do objeto.
         '''
         # Para os cálculos
         w = width/2.0
@@ -193,13 +209,13 @@ class Rectangle(OpenGLComponent):
         ], dtype=np.float32)
 
         # Construção da componente
-        super().__init__(GL_TRIANGLE_STRIP, vertices, color)
+        super().__init__(GL_TRIANGLE_STRIP, vertices, color, line_width)
 
 
 class Square(Rectangle):
     ''' Componente OpenGL para representação de um quadrado '''
 
-    def __init__(self, side:float, x0:float = 0.0, y0:float = 0.0, color:Sequence = None):
+    def __init__(self, side:float, x0:float = 0.0, y0:float = 0.0, color:Sequence = None, line_width:float = 1.0):
         '''
         Inicialização da componente.
 
@@ -214,14 +230,17 @@ class Square(Rectangle):
         color: Sequence, default = None
             Arranjo RGB com quatro dimensões. Caso nenhuma cor seja 
             fornecida, a cor preta será utilizada.
+        line_width: float, default = 1.0
+            Espessura da linha a ser utilizada na renderização 
+            do objeto.
         '''
-        super().__init__(side, side, x0, y0, color)
+        super().__init__(side, side, x0, y0, color, line_width)
 
     
 class Circle(OpenGLComponent):
     ''' Componente OpenGL para representação de um círculo '''
 
-    def __init__(self, x0:float = 0.0, y0:float = 0.0, radius:float = 1.0, num_vertices:int = 64, color:Sequence = None):
+    def __init__(self, x0:float = 0.0, y0:float = 0.0, radius:float = 1.0, num_vertices:int = 64, color:Sequence = None, line_width:float = 1.0):
         '''
         Inicialização da componente.
 
@@ -238,6 +257,9 @@ class Circle(OpenGLComponent):
         color: Sequence, default = None
             Arranjo RGB com quatro dimensões. Caso nenhuma cor seja 
             fornecida, a cor preta será utilizada.
+        line_width: float, default = 1.0
+            Espessura da linha a ser utilizada na renderização 
+            do objeto.
         '''
         # Discretização dos ângulos do círculo
         angles = np.linspace(start=2*np.pi/num_vertices, stop=2*np.pi, num=num_vertices)
@@ -248,7 +270,7 @@ class Circle(OpenGLComponent):
         vertices = tuple(zip(x, y))
         
         # Inicialização da componente principal
-        super().__init__(GL_TRIANGLE_FAN, vertices, color)
+        super().__init__(GL_TRIANGLE_FAN, vertices, color, line_width)
 
 
 class OpenGLComponentCompound:

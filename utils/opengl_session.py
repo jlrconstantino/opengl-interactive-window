@@ -228,6 +228,7 @@ class OpenGLSession:
 
         # Aplicação da coloração e da forma da componente
         glUniform4f(self.color_buffer, *cp.color)
+        glLineWidth(cp.line_width)
         glDrawArrays(cp.primitive, num_rendered_vertices, num_vertices)
 
         return num_vertices
