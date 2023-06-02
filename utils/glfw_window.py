@@ -39,7 +39,7 @@ class GLFWWindow:
             Título da janela
         monitor: int
             Monitor a ser utilizado. Por padrão, utiliza o atualmente ativo.
-        stare: int
+        share: int
             Diretiva de compartilhamento.
         '''
 
@@ -58,7 +58,7 @@ class GLFWWindow:
         # Registro dos atributos
         self.window = window
         self.key_callbacks = defaultdict(list)
-        self.mouse_callbacks = []
+        self.mouse_callbacks = defaultdict(list)
         self.cursor_callbacks = []
         self.initial_cursor_pos = (width/2, height/2)
 
