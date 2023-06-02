@@ -4,7 +4,7 @@ import ctypes
 from OpenGL.GL import *
 from collections.abc import Sequence
 from utils.glfw_window import GLFWWindow
-from utils.components import OpenGLComponent, OpenGLComponentCompound
+from utils.components import OpenGLComponent
 from utils.typeutils import check_type
 from utils.iterutils import flatten
 from utils.colors import rgb_white_color
@@ -36,40 +36,42 @@ class OpenGLSession:
     '''
 
     ''' Atributos '''
-    num_dims = 0
     components = None
     program = None
     color_buffer = None
-    transf_buffer = None
-    transformation = None
+    model_buffer = None
+    view_buffer = None
+    projection_buffer = None
 
-    def __init__(self, window:GLFWWindow, num_dims:int = 2) -> None:
+    def __init__(self, window:GLFWWindow) -> None:
         '''
         Parâmetros:
         ----------
         window: GLFWWindow
             Janela de contexto do GLFW. Utilizado para garantir
             inicialização prévia do módulo.
-        num_dims: int, default = 2
-            Quantia de dimensões a serem utilizadas.
         '''
         # Verifica os argumentos fornecidos
         check_type(window, "window", GLFWWindow)
-        check_type(num_dims, "num_dims", int)
-        if num_dims < 2 or num_dims > 3:
-            raise ValueError("num_dims must be an integer in the interval [2,3]")
-        self.num_dims = num_dims
 
         # Código C para manipulação e transformação dos vértices
         vertex_code = """
-            attribute vec{} position;
-            uniform mat4 mat_transformation;
-            void main(){{
-                gl_Position = mat_transformation * vec4(position,{}1.0);
-            }}
-        """.format(num_dims, "0.0," if num_dims == 2 else "")
 
-        # Código C para manipulação e transformação das cores dos fragmentos
+            // Vetor de posições
+            attribute vec3 position;
+
+            // Matrizes de modelo, visão e projeção
+            uniform mat4 model;
+            uniform mat4 view;
+            uniform mat4 projection;
+
+            // Programa principal
+            void main(){
+                gl_Position = projection * view * model * vec4(position,1.0);
+            } 
+        """
+
+        # Código C para manipulação e transformação dos fragmentos
         fragment_code = """
             uniform vec4 color;
             void main(){
@@ -112,17 +114,17 @@ class OpenGLSession:
         glUseProgram(program)
         self.program = program
 
-        # Inicialização das componentes e da matriz de transformação
+        # Inicialização das componentes
         self.components = list()
-        self.transformation = np.array([[1.0, 0.0, 0.0, 0.0], 
-                                        [0.0, 1.0, 0.0, 0.0], 
-                                        [0.0, 0.0, 1.0, 0.0], 
-                                        [0.0, 0.0, 0.0, 1.0]], np.float32)
+    
+
+    def enable_polygon_mode(self):
+        ''' Ativa o modo poligonal '''
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
     
 
     def add_component(self, component:OpenGLComponent):
         ''' Registra um novo componente '''
-        #check_type(component, "component", OpenGLComponent)
         self.components.append(component)
 
     
@@ -146,7 +148,7 @@ class OpenGLSession:
     def _get_vertices(self):
         ''' Retorna os vértices que integram todos os componentes '''
         flatten_vertices = np.vstack([cp.vertices for cp in self.components])
-        vertices = np.zeros(len(flatten_vertices), [("position", np.float32, self.num_dims)])
+        vertices = np.zeros(len(flatten_vertices), [("position", np.float32, 3)])
         vertices["position"] = flatten_vertices
         return vertices
     
@@ -170,56 +172,24 @@ class OpenGLSession:
         # Associação das posições do GLSL ao buffer
         loc_position = glGetAttribLocation(self.program, "position")
         glEnableVertexAttribArray(loc_position)
-        glVertexAttribPointer(loc_position, self.num_dims, GL_FLOAT, False, stride, offset)
+        glVertexAttribPointer(loc_position, 3, GL_FLOAT, False, stride, offset)
 
-        # Aquisição do buffer de coloração
+        # Aquisição dos buffers de controle
         self.color_buffer = glGetUniformLocation(self.program, "color")
-        self.transf_buffer = glGetUniformLocation(self.program, "mat_transformation")
+        self.model_buffer = glGetUniformLocation(self.program, "model")
+        self.view_buffer = glGetUniformLocation(self.program, "view")
+        self.projection_buffer = glGetUniformLocation(self.program, "projection")
         
         # Para 3D
-        if self.num_dims == 3:
-            glEnable(GL_DEPTH_TEST)
+        glEnable(GL_DEPTH_TEST)
     
 
-    def clear(self, color:Sequence = None):
-        ''' 
-        Limpa a janela da sessão atual. 
-
-        Parâmetros:
-        ----------
-        color: Sequence, default = None
-            Caso fornecida, aplicará a coloração sobre toda 
-            a janela. Caso contrário, utilizará a coloração 
-            branca.
-        '''
-        if color is None:
-            color = rgb_white_color()
+    def clear(self):
+        ''' Limpa a janela da sessão atual '''
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        glClearColor(*color)
+        glClearColor(1.0, 1.0, 1.0, 1.0)
     
 
-    def clear_transformation(self):
-        ''' Remove a matriz de transformações atual '''
-        self.transformation = np.array([[1.0, 0.0, 0.0, 0.0], 
-                                        [0.0, 1.0, 0.0, 0.0], 
-                                        [0.0, 0.0, 1.0, 0.0], 
-                                        [0.0, 0.0, 0.0, 1.0]], np.float32)
-    
-
-    def set_transformation(self, matrix:Sequence):
-        ''' Associa uma matriz de transformação aos buffers do OpenGL '''
-        if len(matrix) != 4:
-            raise ValueError("expected 'matrix' to have four dimensions")
-        self.transformation = matrix
-    
-
-    def add_transformation(self, matrix:Sequence):
-        ''' Encadeia uma nova transformação à transformação atual '''
-        if len(matrix) != 4:
-            raise ValueError("expected 'matrix' to have four dimensions")
-        self.transformation = np.dot(matrix, self.transformation)
-
-    
     def _render_component(self, num_rendered_vertices, cp):
         ''' Renderiza um objeto e retorna a quantia de vértices dele '''
 
@@ -248,12 +218,19 @@ class OpenGLSession:
         for cp in flatten(self.components):
 
             # Aplicação da transformação e renderização
-            if isinstance(cp, OpenGLComponentCompound):
-                glUniformMatrix4fv(self.transf_buffer, 1, GL_TRUE, cp.transformation)
-                for cp2 in cp.components:
-                    num_rendered_vertices += self._render_component(num_rendered_vertices, cp2)
-            else:
-                glUniformMatrix4fv(self.transf_buffer, 1, GL_TRUE, self.transformation)
-                num_rendered_vertices += self._render_component(num_rendered_vertices, cp)
-                
-            
+            glUniformMatrix4fv(self.model_buffer, 1, GL_TRUE, cp.model)
+            num_rendered_vertices += self._render_component(num_rendered_vertices, cp)
+    
+    
+    def view(self, matrix:Sequence = None):
+        ''' Envia uma matriz de visão à GPU '''
+        if matrix is None:
+            matrix = np.identity(4)
+        glUniformMatrix4fv(self.view_buffer, 1, GL_TRUE, matrix)
+    
+
+    def projection(self, matrix:Sequence = None):
+        ''' Envia uma matriz de projeção à GPU '''
+        if matrix is None:
+            matrix = np.identity(4)
+        glUniformMatrix4fv(self.projection_buffer, 1, GL_TRUE, matrix)

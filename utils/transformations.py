@@ -1,112 +1,8 @@
 # Dependências
 from numpy import array, float32, dot, cos, sin
+from collections.abc import Sequence
 
-def translate2D(tx:float, ty:float):
-    '''
-    Retorna uma matriz de translação bidimensional 
-    considerando coordenadas homogêneas.
-
-    Parâmetros:
-    ----------
-    tx: float
-        Translação da abscissa.
-    ty: float
-        Translação da ordenada.
-    '''
-    return array([
-        [1.0, 0.0,  tx], 
-        [0.0, 1.0,  ty], 
-        [0.0, 0.0, 1.0],
-    ], dtype=float32)
-
-
-def scale2D(sx:float, sy:float):
-    '''
-    Retorna uma matriz de escala bidimensional 
-    considerando coordenadas homogêneas.
-
-    Parâmetros:
-    ----------
-    sx: float
-        Escala da abscissa.
-    sy: float
-        Escala da ordenada.
-    '''
-    return array([
-        [ sx, 0.0, 0.0], 
-        [0.0,  sy, 0.0], 
-        [0.0, 0.0, 1.0],
-    ], dtype=float32)
-
-
-def relative_scale2D(sx:float, sy:float, x0:float = 0.0, y0:float = 0.0):
-    '''
-    Retorna uma matriz de escala bidimensional 
-    com ponto de referência considerando 
-    coordenadas homogêneas.
-
-    Parâmetros:
-    ----------
-    sx: float
-        Escala da abscissa.
-    sy: float
-        Escala da ordenada.
-    x0: float, default = 0.0
-        Abscissa do ponto de referência.
-    y0: float, default = 0.0
-        Ordenada do ponto de referência.
-    '''
-    return array([
-        [ sx, 0.0, x0*(1.0-sx)], 
-        [0.0,  sy, y0*(1.0-sy)], 
-        [0.0, 0.0,         1.0],
-    ], dtype=float32)
-
-
-def rotate2D(t:float):
-    '''
-    Retorna uma matriz de rotação bidimensional 
-    considerando coordenadas homogêneas.
-
-    Parâmetros:
-    ----------
-    t: float
-        Ângulo de rotação em radianos.
-    '''
-    c = cos(t)
-    s = sin(t)
-    return array([
-        [ +c,  -s, 0.0], 
-        [ +s,  +c, 0.0], 
-        [0.0, 0.0, 1.0],
-    ], dtype=float32)
-
-
-def relative_rotate2D(t:float, x0:float = 0.0, y0:float = 0.0):
-    '''
-    Retorna uma matriz de rotação bidimensional 
-    com ponto de referência considerando 
-    coordenadas homogêneas.
-
-    Parâmetros:
-    ----------
-    t: float
-        Ângulo de rotação em radianos.
-    x0: float, default = 0.0
-        Abscissa do ponto de referência.
-    y0: float, default = 0.0
-        Ordenada do ponto de referência.
-    '''
-    c = cos(t)
-    s = sin(t)
-    return array([
-        [ +c,  -s, x0 - x0*c + y0*s], 
-        [ +s,  +c, y0 - y0*c - x0*s], 
-        [0.0, 0.0,              1.0],
-    ], dtype=float32)
-
-
-def translate3D(tx:float, ty:float, tz:float = 1.0):
+def translate(tx:float, ty:float, tz:float = 1.0, origin:Sequence = None):
     '''
     Retorna uma matriz de translação tridimensional 
     considerando coordenadas homogêneas.
@@ -119,16 +15,21 @@ def translate3D(tx:float, ty:float, tz:float = 1.0):
         Translação da ordenada.
     tz: float, default = 1.0
         Translação da cota.
+    origin: Sequence, default = None
+        Matriz ao qual multiplicar a transformação.
     '''
-    return array([
+    matrix = array([
         [1.0, 0.0, 0.0,  tx], 
         [0.0, 1.0, 0.0,  ty], 
         [0.0, 0.0, 1.0,  tz],
         [0.0, 0.0, 0.0, 1.0],
     ], dtype=float32)
+    if origin is None:
+        return matrix
+    return dot(origin, matrix)
 
 
-def scale3D(sx:float, sy:float, sz:float = 1.0):
+def scale(sx:float, sy:float, sz:float = 1.0, origin:Sequence = None):
     '''
     Retorna uma matriz de escala tridimensional 
     considerando coordenadas homogêneas.
@@ -141,16 +42,21 @@ def scale3D(sx:float, sy:float, sz:float = 1.0):
         Escala da ordenada.
     sz: float, default = 1.0
         Escala da cota.
+    origin: Sequence, default = None
+        Matriz ao qual multiplicar a transformação.
     '''
-    return array([
+    matrix = array([
         [ sx, 0.0, 0.0, 0.0], 
         [0.0,  sy, 0.0, 0.0], 
         [0.0, 0.0,  sz, 0.0],
         [0.0, 0.0, 0.0, 1.0],
     ], dtype=float32)
+    if origin is None:
+        return matrix
+    return dot(origin, matrix)
 
 
-def xrotate3D(t:float):
+def xrotate(t:float, origin:Sequence = None):
     '''
     Retorna uma matriz de rotação tridimensional 
     no eixo das abscissas considerando coordenadas 
@@ -160,18 +66,23 @@ def xrotate3D(t:float):
     ----------
     t: float
         Ângulo de rotação em radianos.
+    origin: Sequence, default = None
+        Matriz ao qual multiplicar a transformação.
     '''
     c = cos(t)
     s = sin(t)
-    return array([
+    matrix = array([
         [1.0, 0.0, 0.0, 0.0], 
         [0.0,  +c,  -s, 0.0], 
         [0.0,  +s,  +c, 0.0],
         [0.0, 0.0, 0.0, 1.0],
     ], dtype=float32)
+    if origin is None:
+        return matrix
+    return dot(origin, matrix)
 
 
-def yrotate3D(t:float):
+def yrotate(t:float, origin:Sequence = None):
     '''
     Retorna uma matriz de rotação tridimensional 
     no eixo das ordenadas considerando coordenadas 
@@ -181,18 +92,23 @@ def yrotate3D(t:float):
     ----------
     t: float
         Ângulo de rotação em radianos.
+    origin: Sequence, default = None
+        Matriz ao qual multiplicar a transformação.
     '''
     c = cos(t)
     s = sin(t)
-    return array([
+    matrix = array([
         [ +c, 0.0,  +s, 0.0], 
         [0.0, 1.0, 0.0, 0.0], 
         [ -s, 0.0,  +c, 0.0],
         [0.0, 0.0, 0.0, 1.0],
     ], dtype=float32)
+    if origin is None:
+        return matrix
+    return dot(origin, matrix)
 
 
-def zrotate3D(t:float):
+def zrotate(t:float, origin:Sequence = None):
     '''
     Retorna uma matriz de rotação tridimensional 
     no eixo das cotas considerando coordenadas 
@@ -202,18 +118,23 @@ def zrotate3D(t:float):
     ----------
     t: float
         Ângulo de rotação em radianos.
+    origin: Sequence, default = None
+        Matriz ao qual multiplicar a transformação.
     '''
     c = cos(t)
     s = sin(t)
-    return array([
+    matrix = array([
         [ +c,  -s, 0.0, 0.0], 
         [ +s,  +c, 0.0, 0.0], 
         [0.0, 0.0, 1.0, 0.0],
         [0.0, 0.0, 0.0, 1.0],
     ], dtype=float32)
+    if origin is None:
+        return matrix
+    return dot(origin, matrix)
 
 
-def relative_zrotate3D(t:float, x0:float=0.0, y0:float=0.0, z0:float=0.0):
+def relative_zrotate(t:float, x0:float=0.0, y0:float=0.0, z0:float=0.0, origin:Sequence = None):
     '''
     Retorna uma matriz de rotação tridimensional, 
     relativa a um ponto de referência, no eixo das 
@@ -223,11 +144,16 @@ def relative_zrotate3D(t:float, x0:float=0.0, y0:float=0.0, z0:float=0.0):
     ----------
     t: float
         Ângulo de rotação em radianos.
+    origin: Sequence, default = None
+        Matriz ao qual multiplicar a transformação.
     '''
-    return dot(
-        translate3D(x0, y0, z0), 
+    matrix = dot(
+        translate(x0, y0, z0), 
         dot(
-            zrotate3D(t),
-            translate3D(-x0, -y0, -z0)
+            zrotate(t),
+            translate(-x0, -y0, -z0)
         )
     )
+    if origin is None:
+        return matrix
+    return dot(origin, matrix)

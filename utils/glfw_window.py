@@ -1,6 +1,8 @@
 # Dependências
 import glfw
 from collections import defaultdict
+import numpy as np
+import glm
 
 
 # Exceções
@@ -18,6 +20,10 @@ class GLFWWindow:
     ''' Atributos '''
     window = None
     key_callbacks = None
+    mouse_callbacks = None
+    cursor_callbacks = None
+    initial_cursor_pos = None
+    projection = None
 
     def __init__(self, width:int, height:int, title:str = "", *, monitor:int = None, share:int = None):
         ''' 
@@ -52,7 +58,19 @@ class GLFWWindow:
         # Registro dos atributos
         self.window = window
         self.key_callbacks = defaultdict(list)
-        self.mouse_callbacks = defaultdict(list)
+        self.mouse_callbacks = []
+        self.cursor_callbacks = []
+        self.initial_cursor_pos = (width/2, height/2)
+
+        # Projeção de tela
+        self.projection = np.array (
+            glm.perspective (
+                glm.radians(45.0),  # fovy
+                width/height,       # aspect
+                0.1,                # near
+                1000.0              # far
+            )
+        )
 
         # Eventos de tecla
         def key_event(window, key, scancode, action, mods):
@@ -65,6 +83,12 @@ class GLFWWindow:
             for callback in self.mouse_callbacks[button]:
                 callback(button, action)
         glfw.set_mouse_button_callback(window,mouse_event)
+
+        # Eventos de ponteiro de mouse
+        def cursor_event(window, xpos, ypos):
+            for callback in self.cursor_callbacks:
+                callback(xpos, ypos)
+        glfw.set_cursor_pos_callback(window, cursor_event)
     
 
     def add_key_callback(self, key:str, callback):
@@ -93,7 +117,7 @@ class GLFWWindow:
     def add_mouse_callback(self, button:str, callback):
         ''' 
         Adiciona um callback aos eventos de uma tecla 
-        específica.
+        específica do mouse.
 
         Parâmetros:
         ----------
@@ -111,8 +135,21 @@ class GLFWWindow:
             self.mouse_callbacks[button].append(callback)
         except:
             raise UnknownKeyError()
-        
+    
 
+    def add_cursor_callback(self, callback):
+        ''' 
+        Adiciona um callback aos eventos de movimentação 
+        do cursor sobre a tela.
+
+        Parâmetros:
+        ----------
+        callback: function
+            Função de callback. Deve apresentar dois 
+            parâmetros: xpos e ypos nesta ordem.
+        '''
+        self.cursor_callbacks.append(callback)
+        
 
     def display(self):
         '''
@@ -123,6 +160,7 @@ class GLFWWindow:
         # Habilitação da janela
         window = self.window
         glfw.show_window(self.window)
+        glfw.set_cursor_pos(window, *self.initial_cursor_pos)
         try:
 
             # Enquanto não encerrá-la, itera
