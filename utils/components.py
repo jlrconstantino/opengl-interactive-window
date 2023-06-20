@@ -6,8 +6,11 @@ from pywavefront import Wavefront
 class WaveFrontMaterialController:
     ''' Classe de controle de acesso às características de um material WaveFront '''
 
-    def __init__(self, material, model, ka, kd, ks, ns):
+    def __init__(self, name, material, model, ka, kd, ks, ns):
         ''' Inicialização a partir de um material '''
+
+        # Nome da componente
+        self.name = name
 
         # Matriz model (guarda a referência)
         self.model = model
@@ -93,6 +96,14 @@ class WaveFrontObject:
 
         # Extração dos materiais
         self.materials = [
-            WaveFrontMaterialController(material, model, ka, kd, ks, ns) 
-            for _, material in scene.materials.items()
+            WaveFrontMaterialController(name, material, self.model, ka, kd, ks, ns) 
+            for name, material in scene.materials.items()
         ]
+
+    def set_model(self, value):
+        ''' Atualização da matriz Model '''
+        self.model = value
+        for mt in self.materials:
+            mt.model = value
+        
+            
