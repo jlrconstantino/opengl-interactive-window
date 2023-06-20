@@ -53,7 +53,10 @@ class WaveFrontMaterialController:
         self.vertices = array(vertices).reshape(-1,3)
 
         # Armazenamento do caminho da textura
-        self.texture_filepath = material.texture._path
+        try:
+            self.texture_filepath = material.texture._path
+        except:
+            self.texture_filepath = "obj/blank.png"
 
 
 
