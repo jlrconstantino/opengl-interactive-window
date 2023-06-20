@@ -89,6 +89,7 @@ class WaveFrontObject:
         # Matriz Model
         if model is None:
             model = identity(4)
+        self.model = model
 
         # Extração dos materiais
         self.materials = [
