@@ -55,7 +55,7 @@ class WaveFrontMaterialController:
         # Armazenamento do caminho da textura
         try:
             self.texture_filepath = material.texture._path
-        except:
+        except AttributeError:
             self.texture_filepath = "obj/blank.png"
 
 
@@ -67,9 +67,9 @@ class WaveFrontObject:
                  obj_filename:str, 
                  model:Sequence = None,
                  ka:float=1.0, 
-                 kd:float=0.5, 
-                 ks:float=0.5, 
-                 ns:float=1.0):
+                 kd:float=0.64, 
+                 ks:float=0.0, 
+                 ns:float=0.0):
         '''
         Inicialização da componente.
 
