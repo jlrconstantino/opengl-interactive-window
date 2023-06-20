@@ -1,108 +1,69 @@
 # Dependências
 from collections.abc import Sequence
-import numpy as np
-from utils.colors import rgb_black_color
-from OpenGL.GL import GL_TRIANGLES
+from numpy import identity, array
+from pywavefront import Wavefront
 
+class WaveFrontMaterialController:
+    ''' Classe de controle de acesso às características de um material WaveFront '''
 
-class OpenGLComponent:
-    ''' Representa uma componente OpenGL '''
+    def __init__(self, material, model, ka, kd, ks, ns):
+        ''' Inicialização a partir de um material '''
 
-    ''' Atributos '''
-    primitive:int
-    vertices:Sequence
-    model:Sequence
-
-    def __init__(self, primitive:int, vertices:Sequence, model:Sequence = None):
-        '''
-        Inicialização da componente.
-
-        Parâmetros:
-        ----------
-        primitive: int
-            Primitiva de renderização do OpenGL
-        vertices: Sequence
-            Arranjo contendo os vértices.
-        model: Sequence, default = None
-            Matriz de modelo da componente. Caso nenhuma seja fornecida, 
-            utilizará a matriz identidade.
-        '''
-        if model is None:
-            model = np.identity(4)
-        self.primitive = primitive
-        self.vertices = vertices
+        # Matriz model (guarda a referência)
         self.model = model
-    
-    def transform(self, matrix:Sequence):
-        ''' 
-        Realiza transformação dos vértices com base 
-        em uma matriz de transformação fornecida. 
-        '''
-        self.vertices = np.dot(matrix, self.vertices)
 
-    def __len__(self):
-        ''' Retorna o número de vértices da componente. '''
-        return len(self.vertices)
+        # Controle de iluminação
+        self.ka = ka
+        self.kd = kd
+        self.ks = ks
+        self.ns = ns
 
+        # Listas de vértices
+        textures = []
+        normals = []
+        vertices = []
 
-def load_model_from_file(filename):
-    """Loads a Wavefront OBJ file. """
-    vertices = []
-    normals = []
-    texture_coords = []
-    faces = []
+        # Dados
+        FACE_SIZE = 8
+        mv = material.vertices
 
-    material = None
+        # Aquisição e separação dos vértices; formato "T2F_N3F_V3F"
+        for idx in range(0, len(mv), FACE_SIZE):
 
-    # abre o arquivo obj para leitura
-    for line in open(filename, "r"): ## para cada linha do arquivo .obj
-        if line.startswith('#'): continue ## ignora comentarios
-        values = line.split() # quebra a linha por espaço
-        if not values: continue
+            # T2F
+            textures.append(mv[idx])
+            textures.append(mv[idx+1])
 
-        ### recuperando vertices
-        if values[0] == 'v':
-            vertices.append(values[1:4])
+            # N3F
+            normals.append(mv[idx+2])
+            normals.append(mv[idx+3])
+            normals.append(mv[idx+4])
 
-        ### recuperando vertices
-        if values[0] == 'vn':
-            normals.append(values[1:4])
+            # V3F
+            vertices.append(mv[idx+5])
+            vertices.append(mv[idx+6])
+            vertices.append(mv[idx+7])
 
-        ### recuperando coordenadas de textura
-        elif values[0] == 'vt':
-            texture_coords.append(values[1:3])
+        # Armazenamento dos vértices
+        self.textures = array(textures).reshape(-1,2)
+        self.normals = array(normals).reshape(-1,3)
+        self.vertices = array(vertices).reshape(-1,3)
 
-        ### recuperando faces 
-        elif values[0] in ('usemtl', 'usemat'):
-            material = values[1]
-        elif values[0] == 'f':
-            face = []
-            face_texture = []
-            face_normals = []
-            for v in values[1:]:
-                w = v.split('/')
-                face.append(int(w[0]))
-                face_normals.append(int(w[2]))
-                if len(w) >= 2 and len(w[1]) > 0:
-                    face_texture.append(int(w[1]))
-                else:
-                    face_texture.append(0)
-
-            faces.append((face, face_texture, face_normals, material))
-
-    model = {}
-    model['vertices'] = vertices
-    model['texture'] = texture_coords
-    model['faces'] = faces
-    model['normals'] = normals
-
-    return model
+        # Armazenamento do caminho da textura
+        self.texture_filepath = material.texture._path
 
 
-class WaveFrontObject(OpenGLComponent):
+
+class WaveFrontObject:
     ''' Componente OpenGL para representação de objetos WaveFront '''
 
-    def __init__(self, obj_filename:str, texture_filename:str, ka:float=1.0, kd:float=0.5, ks:float=0.5, ns:float=1.0):
+    def __init__(self, 
+                 obj_filename:str, 
+                 model:Sequence = None,
+                 ka:float=1.0, 
+                 kd:float=0.5, 
+                 ks:float=0.5, 
+                 ns:float=1.0):
         '''
         Inicialização da componente.
 
@@ -110,8 +71,9 @@ class WaveFrontObject(OpenGLComponent):
         ----------
         obj_filename: str
             Caminho para o arquivo .obj.
-        texture_filename: str
-            Caminho para o arquivo de textura.
+        model: Sequence, default = None
+            Matriz de modelo da componente. Caso nenhuma seja fornecida, 
+            utilizará a matriz identidade.
         ka: float, default = 1.0
             Coeficiente de reflexão ambiente.
         kd: float, default = 0.5
@@ -122,31 +84,14 @@ class WaveFrontObject(OpenGLComponent):
             Expoente de reflexão especular.
         '''
         # Carregamento do modelo do objeto
-        model = load_model_from_file(obj_filename)
-        vertices = []
-        texture_vertices = []
-        normals_vertices = []
-        for face in model['faces']:
-            for vertice_id in face[0]: 
-                vertices.append( model['vertices'][vertice_id-1] )
-            for texture_id in face[1]:
-                texture_vertices.append( model['texture'][texture_id-1] )
-            for normal_id in face[2]:
-                normals_vertices.append( model['normals'][normal_id-1] )
+        scene = Wavefront(obj_filename, collect_faces=True)
         
-        # Inicialização da componente
-        primitive = GL_TRIANGLES
-        super().__init__(primitive, vertices)
+        # Matriz Model
+        if model is None:
+            model = identity(4)
 
-        # Texturas
-        self.texture_filename = texture_filename
-        self.texture_vertices = texture_vertices
-
-        # Vetores normais
-        self.normals_vertices = normals_vertices
-
-        # Controle de iluminação
-        self.ka = ka
-        self.kd = kd
-        self.ks = ks
-        self.ns = ns
+        # Extração dos materiais
+        self.materials = [
+            WaveFrontMaterialController(material, model, ka, kd, ks, ns) 
+            for _, material in scene.materials.items()
+        ]

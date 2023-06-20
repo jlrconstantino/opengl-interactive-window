@@ -176,7 +176,7 @@ class OpenGLSession:
         self.program = program
 
         # Inicialização das componentes
-        self.components = list()
+        self.materials = list()
 
         # Ativação do uso de texturas 2D
         glEnable(GL_TEXTURE_2D)
@@ -195,7 +195,8 @@ class OpenGLSession:
 
     def add_component(self, component:WaveFrontObject):
         ''' Registra um novo componente '''
-        self.components.append(component)
+        for material in component.materials:
+            self.materials.append(material)
 
     
     def add_components(self, components:Sequence):
@@ -211,7 +212,7 @@ class OpenGLSession:
         destruídos. Logo, processe-os novamente antes de 
         realizar uma nova renderização.
         '''
-        self.components = list()
+        self.materials = list()
         self.buffered = False
 
     
@@ -239,7 +240,7 @@ class OpenGLSession:
 
     def _get_vertices(self):
         ''' Retorna os vértices que integram todos os componentes '''
-        flatten_vertices = np.vstack([cp.vertices for cp in self.components])
+        flatten_vertices = np.vstack([mt.vertices for mt in self.materials])
         vertices = np.zeros(len(flatten_vertices), [("position", np.float32, 3)])
         vertices["position"] = flatten_vertices
         return vertices
@@ -247,7 +248,7 @@ class OpenGLSession:
 
     def _get_texture_vertices(self):
         ''' Retorna os vértices de textura que integram todos os componentes '''
-        flatten_vertices = np.vstack([cp.texture_vertices for cp in self.components])
+        flatten_vertices = np.vstack([mt.textures for mt in self.materials])
         textures = np.zeros(len(flatten_vertices), [("position", np.float32, 2)])
         textures["position"] = flatten_vertices
         return textures
@@ -255,7 +256,7 @@ class OpenGLSession:
 
     def _get_normals_vertices(self):
         ''' Retorna os vértices das normais que integram todos os componentes '''
-        flatten_vertices = np.vstack([cp.normals_vertices for cp in self.components])
+        flatten_vertices = np.vstack([mt.normals for mt in self.materials])
         normals = np.zeros(len(flatten_vertices), [("position", np.float32, 3)])
         normals["position"] = flatten_vertices
         return normals
@@ -283,9 +284,9 @@ class OpenGLSession:
         glVertexAttribPointer(loc_position, 3, GL_FLOAT, False, stride, offset)
 
         # Geração e carregamento das texturas
-        glGenTextures(len(self.components))
-        for idx, cp in enumerate(self.components):
-            self._load_texture_from_file(idx, cp.texture_filename)
+        glGenTextures(len(self.materials))
+        for idx, mt in enumerate(self.materials):
+            self._load_texture_from_file(idx, mt.texture_filepath)
 
         # Envio dos vértices de textura à GPU
         textures = self._get_texture_vertices()
@@ -338,22 +339,22 @@ class OpenGLSession:
         glClearColor(*self.clear_color)
     
 
-    def _render_component(self, idx, num_rendered_vertices, cp):
+    def _render_component(self, idx, num_rendered_vertices, mt):
         ''' Renderiza um objeto e retorna a quantia de vértices dele '''
 
         # Quantia de vértices da componente
-        num_vertices = len(cp)
+        num_vertices = len(mt.vertices)
 
         # Controle de iluminação
-        glUniform1f(self.ka_buffer, cp.ka)
-        glUniform1f(self.kd_buffer, cp.kd)
-        glUniform1f(self.ks_buffer, cp.ks)
-        glUniform1f(self.ns_buffer, cp.ns)
+        glUniform1f(self.ka_buffer, mt.ka)
+        glUniform1f(self.kd_buffer, mt.kd)
+        glUniform1f(self.ks_buffer, mt.ks)
+        glUniform1f(self.ns_buffer, mt.ns)
 
         # Modelo, textura e desenho dos polígonos
-        glUniformMatrix4fv(self.model_buffer, 1, GL_TRUE, cp.model)
+        glUniformMatrix4fv(self.model_buffer, 1, GL_TRUE, mt.model)
         glBindTexture(GL_TEXTURE_2D, idx)
-        glDrawArrays(cp.primitive, num_rendered_vertices, num_vertices)
+        glDrawArrays(GL_TRIANGLES, num_rendered_vertices, num_vertices)
 
         return num_vertices
 
@@ -374,8 +375,8 @@ class OpenGLSession:
         num_rendered_vertices = 0
 
         # Renderização das componentes
-        for idx, cp in enumerate(flatten(self.components)):
-            num_rendered_vertices += self._render_component(idx, num_rendered_vertices, cp)
+        for idx, mt in enumerate(flatten(self.materials)):
+            num_rendered_vertices += self._render_component(idx, num_rendered_vertices, mt)
     
     
     def view(self, matrix:Sequence = None):
