@@ -104,3 +104,71 @@ class Camera:
                 self.up
             )
         )
+
+
+class RestrictedCamera(Camera):
+    ''' Câmera com restrições de posição '''
+
+    def __init__(
+        self, 
+        *, 
+        min_xpos:float = -1000.0, 
+        max_xpos:float = 1000.0, 
+        min_ypos:float = -1000.0, 
+        max_ypos:float = 1000.0,
+        min_zpos:float = -1000.0, 
+        max_zpos:float = 1000.0,
+        **kwargs
+    ):
+        # Inicialização da classe pai
+        super().__init__(**kwargs)
+
+        # Posições em x
+        self.min_xpos = min_xpos
+        self.max_xpos = max_xpos
+
+        # Posições em y
+        self.min_ypos = min_ypos
+        self.max_ypos = max_ypos
+
+        # Posições em z
+        self.min_zpos = min_zpos
+        self.max_zpos = max_zpos
+    
+    def check_position(self):
+        x, y, z = self.position
+        if x < self.min_xpos or x > self.max_xpos:
+            return False
+        if y < self.min_ypos or y > self.max_ypos:
+            return False
+        if z < self.min_zpos or z > self.max_zpos:
+            return False
+        return True
+    
+    def move_forward(self, *_):
+        ''' Mover para frente caso ativa '''
+        x, y, z = self.position
+        super().move_forward()
+        if self.check_position() == False:
+            self.position = glm.vec3(x,y,z)
+    
+    def move_right(self, *_):
+        ''' Mover para a direita caso ativa '''
+        x, y, z = self.position
+        super().move_right()
+        if self.check_position() == False:
+            self.position = glm.vec3(x,y,z)
+    
+    def move_backward(self, *_):
+        ''' Mover para trás caso ativa '''
+        x, y, z = self.position
+        super().move_backward()
+        if self.check_position() == False:
+            self.position = glm.vec3(x,y,z)
+
+    def move_left(self, *_):
+        ''' Mover para a esquerda caso ativa '''
+        x, y, z = self.position
+        super().move_left()
+        if self.check_position() == False:
+            self.position = glm.vec3(x,y,z)
