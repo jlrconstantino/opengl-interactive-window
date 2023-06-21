@@ -6,7 +6,7 @@ from pywavefront import Wavefront
 class WaveFrontMaterialController:
     ''' Classe de controle de acesso às características de um material WaveFront '''
 
-    def __init__(self, name, material, model, ka, kd, ks, ns):
+    def __init__(self, name, material, model):
         ''' Inicialização a partir de um material '''
 
         # Nome da componente
@@ -16,10 +16,10 @@ class WaveFrontMaterialController:
         self.model = model
 
         # Controle de iluminação
-        self.ka = ka
-        self.kd = kd
-        self.ks = ks
-        self.ns = ns
+        self.ka = model.ambient[0]
+        self.kd = model.diffuse[0]
+        self.ks = model.specular[0]
+        self.ns = model.shininess
 
         # Listas de vértices
         textures = []
@@ -63,13 +63,7 @@ class WaveFrontMaterialController:
 class WaveFrontObject:
     ''' Componente OpenGL para representação de objetos WaveFront '''
 
-    def __init__(self, 
-                 obj_filename:str, 
-                 model:Sequence = None,
-                 ka:float=1.0, 
-                 kd:float=0.64, 
-                 ks:float=0.0, 
-                 ns:float=0.0):
+    def __init__(self, obj_filename:str, model:Sequence = None):
         '''
         Inicialização da componente.
 
@@ -80,14 +74,6 @@ class WaveFrontObject:
         model: Sequence, default = None
             Matriz de modelo da componente. Caso nenhuma seja fornecida, 
             utilizará a matriz identidade.
-        ka: float, default = 1.0
-            Coeficiente de reflexão ambiente.
-        kd: float, default = 0.5
-            Coeficiente de reflexão difusa.
-        ks: float, default = 0.5
-            Coeficiente de reflexão especular.
-        ns: float, default = 1.0
-            Expoente de reflexão especular.
         '''
         # Carregamento do modelo do objeto
         scene = Wavefront(obj_filename, collect_faces=True)
@@ -99,7 +85,7 @@ class WaveFrontObject:
 
         # Extração dos materiais
         self.materials = [
-            WaveFrontMaterialController(name, material, self.model, ka, kd, ks, ns) 
+            WaveFrontMaterialController(name, material, self.model) 
             for name, material in scene.materials.items()
         ]
 
