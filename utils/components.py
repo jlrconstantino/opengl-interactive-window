@@ -16,10 +16,10 @@ class WaveFrontMaterialController:
         self.model = model
 
         # Controle de iluminação
-        self.ka = model.ambient[0]
-        self.kd = model.diffuse[0]
-        self.ks = model.specular[0]
-        self.ns = model.shininess
+        self.ka = material.ambient[0]
+        self.kd = material.diffuse[0]
+        self.ks = material.specular[0]
+        self.ns = material.shininess
 
         # Listas de vértices
         textures = []
