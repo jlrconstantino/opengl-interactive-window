@@ -24,6 +24,7 @@ class GLFWWindow:
     cursor_callbacks = None
     initial_cursor_pos = None
     projection = None
+    aspect = None
 
     def __init__(self, width:int, height:int, title:str = "", *, monitor:int = None, share:int = None):
         ''' 
@@ -61,16 +62,7 @@ class GLFWWindow:
         self.mouse_callbacks = defaultdict(list)
         self.cursor_callbacks = []
         self.initial_cursor_pos = (width/2, height/2)
-
-        # Projeção de tela
-        self.projection = np.array (
-            glm.perspective (
-                glm.radians(45.0),  # fovy
-                width/height,       # aspect
-                0.1,                # near
-                1000.0              # far
-            )
-        )
+        self.aspect = width/height
 
         # Eventos de tecla
         def key_event(window, key, scancode, action, mods):
@@ -89,6 +81,15 @@ class GLFWWindow:
             for callback in self.cursor_callbacks:
                 callback(xpos, ypos)
         glfw.set_cursor_pos_callback(window, cursor_event)
+    
+
+    def get_projection(self, fovy=45.0, near=0.1, far=1000.0):
+        ''' Projeção de tela '''
+        return np.array (
+            glm.perspective (
+                glm.radians(fovy), self.aspect, near, far
+            )
+        )
     
 
     def add_key_callback(self, key:str, callback):
