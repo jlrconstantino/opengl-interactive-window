@@ -29,7 +29,8 @@ class Camera:
         last_xpos:float = 0.0, 
         last_ypos:float = 0.0,
         yaw:float = -90.0, 
-        pitch:float = 0.0
+        pitch:float = 0.0,
+        position:list = None
     ):
         ''' Inicialização da câmera '''
         
@@ -45,7 +46,9 @@ class Camera:
         self.pitch = pitch
 
         # Atributos posicionais
-        self.position = glm.vec3(0.0,  0.0,  1.0);
+        if position is None:
+            position = (0.0,  0.0,  1.0)
+        self.position = glm.vec3(*position)
         self.front = glm.vec3(0.0,  0.0, -1.0);
         self.up = glm.vec3(0.0,  1.0,  0.0)
     

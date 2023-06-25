@@ -11,4 +11,4 @@ Ni 1.000000
 d 1.000000
 illum 2
 map_Kd textures/Cottage_Clean_Base_Color.png
-map_Bump textures/Cottage_Clean_Roughness.png
+map_Bump textures/Cottage_Clean_Normal.png

@@ -1,6 +1,6 @@
 # Blender 3.5.1
 # www.blender.org
-mtllib stone-floor.mtl
+mtllib grass-floor.mtl
 o Plane001
 v -0.058557 0.000000 2.242648
 v -0.058557 0.000000 2.153748
