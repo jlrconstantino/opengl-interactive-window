@@ -10,10 +10,10 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 0.000000
 illum 2
-map_Kd textures\bpng.jpg
-map_Bump  textures\\bpng_NRM Kopie.jpg
-map_Ks  textures\\bpng.jpg
-map_d  textures\\bpng_Schwaz_weistensel.jpg
+map_Kd textures/bpng.jpg
+map_Bump  textures/bpng_NRM Kopie.jpg
+map_Ks  textures/bpng.jpg
+map_d  textures/bpng_Schwaz_weistensel.jpg
 
 newmtl Blatt_NONE
 Ns 96.078431
@@ -24,10 +24,10 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 0.000000
 illum 2
-map_Bump  textures\\bpng_NRM Kopie.jpg
-map_Kd  textures\\bpng.jpg
-map_Ks  textures\\bpng.jpg
-map_d  textures\\bpng_Schwaz_weistensel.jpg
+map_Bump  textures/bpng_NRM Kopie.jpg
+map_Kd  textures/bpng.jpg
+map_Ks  textures/bpng.jpg
+map_d  textures/bpng_Schwaz_weistensel.jpg
 
 newmtl Material
 Ns 96.078431
@@ -38,6 +38,6 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 2
-map_Kd textures\Pot textures_col.jpg
-map_Bump  textures\\Pot textures_nor.png
-map_Ks  textures\\Pot textures_col.jpg
+map_Kd textures/Pot textures_col.jpg
+map_Bump  textures/Pot textures_nor.png
+map_Ks  textures/Pot textures_col.jpg

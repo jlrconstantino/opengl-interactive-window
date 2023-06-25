@@ -10,5 +10,5 @@ newmtl wire_180180180
 	Ka 0.7059 0.7059 0.7059
 	Kd 0.7059 0.7059 0.7059
 	Ks 0.3500 0.3500 0.3500
-map_Kd map\wood-018_larch-european-2_d.png
-map_Bump  map\\bump.png
+map_Kd map/wood-018_larch-european-2_d.png
+map_Bump  map/bump.png
