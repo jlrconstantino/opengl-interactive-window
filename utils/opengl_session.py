@@ -98,7 +98,7 @@ class OpenGLSession:
         fragment_code = """
             // Posição e coloração da luz
             uniform vec3 lightPos;
-            vec3 lightColor = vec3(1.0, 1.0, 1.0);
+            vec3 lightColor = vec3(0.32, 0.32, 0.32);
             
             // Parâmetros da iluminação ambiente e difusa
             uniform float ka;   // Coeficiente de reflexão ambiente
